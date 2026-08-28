@@ -1,0 +1,26 @@
+# --- Python ---
+__pycache__/
+*.py[cod]
+venv/
+.pytest_cache/
+
+# --- Generated data ---
+# Rendered scenes, ~750 MB, reproducible from render_dataset.py.
+data/raw/
+# Packed float16 cache of the above, ~1.8 GB.
+data/views.npy
+data/views.json
+
+# --- Training output ---
+# Checkpoints are large and regenerable; the history JSON is kept because it is
+# the record of what was measured.
+runs/**/best.pt
+
+# --- macOS ---
+.DS_Store
+
+# Local assistant context, not part of the project
+CLAUDE.md
+
+# Smoke-test output
+data/smoke/

@@ -1,0 +1,10 @@
+# Runtime dependencies.
+#
+# Versions pinned to what this was developed and measured against. Blender is a
+# separate install (5.x) and is not a Python package here: render_dataset.py runs
+# inside Blender's own interpreter, not this virtual environment.
+
+numpy==2.5.2
+torch==2.13.0
+OpenEXR==3.4.15      # reads the multilayer EXR files Blender writes
+pillow==12.3.0       # comparison figures only
