@@ -25,7 +25,4 @@ CLAUDE.md
 # Smoke-test output
 data/smoke/
 
-.pytest_cache/
-
 # Test runner cache
-.pytest_cache/
