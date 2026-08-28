@@ -7,7 +7,7 @@ evaluated against Intel's production denoiser.
 **On 45 held-out scenes it recovers +7.85 dB, roughly a 6x reduction in render
 cost, and lands 2.24 dB short of OpenImageDenoise.**
 
-![Comparison](comparison.png)
+![Comparison](docs/comparison.png)
 
 *Centre crops of three held-out scenes. Left to right: the 4-sample input, a
 Gaussian blur baseline, this model, OpenImageDenoise, and the 512-sample
@@ -21,7 +21,7 @@ samples accumulate. Render time scales linearly with sample count, while noise
 falls only as the square root, so each halving of noise costs four times the
 compute.
 
-![Convergence](convergence.png)
+![Convergence](docs/convergence.png)
 
 *The same scene at increasing sample counts. Nothing changes but how long the
 renderer was allowed to run.*
@@ -142,12 +142,12 @@ Decisions worth stating:
 
 ## Data generation
 
-![Inputs](inputs.png)
+![Inputs](docs/inputs.png)
 
 *What each training example contains: the noisy input, the converged target, and
 the two auxiliary buffers the renderer produces almost free.*
 
-`render_dataset.py` drives Blender headless, rendering each scene twice: 4
+`blender/render_dataset.py` drives Blender headless, rendering each scene twice: 4
 samples for the input and 512 for the target, plus albedo and normal buffers.
 
 Four decisions there are load-bearing:
@@ -202,7 +202,7 @@ python3 -m venv venv
 Generate the dataset (about 15 minutes on an M3):
 
 ```bash
-/Applications/Blender.app/Contents/MacOS/Blender --background --python render_dataset.py -- \
+/Applications/Blender.app/Contents/MacOS/Blender --background --python blender/render_dataset.py -- \
     --out data/raw --views 300 --noisy-spp 4 --clean-spp 512 --resolution 512 --procedural
 ```
 
@@ -210,7 +210,7 @@ Optionally add the OpenImageDenoise baseline, which replays the identical scenes
 with Cycles' denoiser enabled:
 
 ```bash
-/Applications/Blender.app/Contents/MacOS/Blender --background --python render_dataset.py -- \
+/Applications/Blender.app/Contents/MacOS/Blender --background --python blender/render_dataset.py -- \
     --out data/raw --views 300 --noisy-spp 4 --resolution 512 --procedural --oidn
 ```
 
@@ -237,20 +237,29 @@ any of those would look like a model that simply underperforms.
 
 ```
 .
-├── render_dataset.py           Blender script: scene generation and rendering
-├── train.py                    training entry point
-├── evaluate.py                 scoring against baselines
-├── figures.py                  comparison image
+├── train.py                     entry points, thin wrappers over the package
+├── evaluate.py
+├── figures.py
+│
+├── blender/
+│   └── render_dataset.py        scene generation and rendering
 │
 ├── denoiser/
-│   ├── data.py                 EXR loading, splits, metrics
-│   ├── dataset.py              PyTorch datasets over the cached renders
-│   ├── model.py                U-Net, log-space transforms, normalisation
-│   ├── train.py                training loop
-│   ├── evaluate.py             baselines and comparison
-│   └── figures.py              figure generation
+│   ├── data.py                  EXR loading, splits, metrics
+│   ├── dataset.py               PyTorch datasets over the cached renders
+│   ├── model.py                 U-Net, log-space transforms, normalisation
+│   ├── train.py                 training loop
+│   ├── evaluate.py              baselines and comparison
+│   └── figures.py               figure generation
 │
-├── data/raw/                   rendered scenes (gitignored, ~750 MB)
-├── runs/                       checkpoints and training histories
-└── tests/                      50 tests
+├── data/raw/                    rendered scenes (gitignored, ~750 MB)
+├── runs/                        training histories, and gitignored checkpoints
+├── docs/                        figures used above
+└── tests/                       50 tests
 ```
+
+`blender/` is separate on purpose. That script runs inside Blender's own Python
+interpreter, so it cannot import `denoiser/` and does not see this project's
+virtual environment. Everything else runs in the venv. Keeping the two apart
+makes the boundary visible rather than something to rediscover when an import
+fails.
